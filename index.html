@@ -180,6 +180,11 @@ async function loadData(){
       oqty:r.fields[F.oqty]||null,
       odate:r.fields[F.odate]||null
     }));
+    // Debug: log first product to console
+    if(prods.length>0){
+      console.log('First product:', JSON.stringify(prods[0]));
+      console.log('Storage value:', JSON.stringify(prods[0].stor));
+    }
     render();
   }catch(e){
     document.getElementById('err-area').innerHTML=`<div class="err">Could not connect to Airtable: ${e.message}. Check your internet connection and refresh.</div>`;
@@ -203,7 +208,7 @@ function stats(){
   document.getElementById('s-ord').textContent=prods.filter(p=>status(p)==='ordered').length;
 }
 
-const SORDER=['FROZEN','COLD','FRESH','DRY','PACK'];
+const SORDER=["FROZEN",'COLD','FRESH','DRY','PACK'];
 
 function render(){
   stats();
@@ -221,6 +226,8 @@ function render(){
     return true;
   });
 
+  console.log('Filtered list length:', list.length, 'filter:', flt);
+  if(list.length>0) console.log('First filtered item stor:', list[0].stor);
   if(!list.length){
     document.getElementById('list').innerHTML='<div class="empty">Nothing found</div>';
     return;
@@ -228,16 +235,18 @@ function render(){
 
   const byCat={};
   list.forEach(p=>{
-    const k=p.stor||'OTHER';
+    const k=(p.stor&&p.stor.trim())||'OTHER';
     if(!byCat[k]) byCat[k]=[];
     byCat[k].push(p);
   });
 
   let html='';
+  // Also add any storage values not in SORDER
+  Object.keys(byCat).forEach(k=>{if(!SORDER.includes(k))SORDER.push(k);});
   SORDER.forEach(stor=>{
     const grp=byCat[stor];
     if(!grp||!grp.length) return;
-    html+=`<div class="sec-label">${stor}</div>`;
+    html+=`<div class="sec-label">${stor||'OTHER'}</div>`;
     grp.forEach(p=>{
       const s=status(p);
       const pct=p.min>0?Math.round(p.stock/p.min*100):100;
