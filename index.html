@@ -165,18 +165,20 @@ async function loadData(){
       all=all.concat(d.records||[]);
       offset=d.offset||null;
     }while(offset);
+    // Helper: singleSelect fields return {id,name,color} objects
+    const sel = v => (v && typeof v === 'object' && v.name) ? v.name : (v || '');
     prods=all.map(r=>({
       id:r.id,
       name:r.fields[F.name]||'',
       nameES:r.fields[F.nameES]||'',
-      cat:r.fields[F.cat]||'',
-      stor:r.fields[F.stor]||'',
+      cat:sel(r.fields[F.cat]),
+      stor:sel(r.fields[F.stor]),
       sup:r.fields[F.sup]||'',
       sku:r.fields[F.sku]||'',
       unit:r.fields[F.unit]||'',
       stock:r.fields[F.stock]??0,
       min:r.fields[F.min]||1,
-      status:r.fields[F.status]||'In stock',
+      status:sel(r.fields[F.status])||'In stock',
       oqty:r.fields[F.oqty]||null,
       odate:r.fields[F.odate]||null
     }));
@@ -226,8 +228,6 @@ function render(){
     return true;
   });
 
-  console.log('Filtered list length:', list.length, 'filter:', flt);
-  if(list.length>0) console.log('First filtered item stor:', list[0].stor);
   if(!list.length){
     document.getElementById('list').innerHTML='<div class="empty">Nothing found</div>';
     return;
